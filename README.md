@@ -30,7 +30,7 @@ http://localhost:8080/
 
 ## Note:
 
-Stylesheet is a file inside src/client/styles
+Stylesheet is a file inside ```src/client/styles```
 This is not minified css version !!!
 
 

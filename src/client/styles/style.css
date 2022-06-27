@@ -1,0 +1,14 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  overflow: hidden;
+  margin: 0px;
+  padding: 0;
+}
+
+.c {
+  width: 200px;
+  height: 200px;
+}

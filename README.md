@@ -37,6 +37,13 @@ https://localhost:8080/
 
 Stylesheet is a file inside ```src/client/styles```
 This is not minified css version !!!
+and,
+
+The sample code is not my code, its just that i found it cool that this code is projecting a cube from four direction like i used to do in engineering drawing in undergrad so i found it cool as a test code !!
+
+I will write a sample code for hierarchial 3D object as a test code in few days and remove this !!
+
+If you want to check it you can always go to commit history !!! 
 
 
 

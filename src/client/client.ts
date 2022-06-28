@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import Stats from "three/examples/jsm/libs/stats.module";
 import { GUI } from "dat.gui";
+import { VRButton } from "three/examples/jsm/webxr/VRButton.js";
 
 const scene = new THREE.Scene();
 
@@ -59,6 +60,10 @@ cubeFolder.open();
 const cameraFolder = gui.addFolder("Camera");
 cameraFolder.add(camera1.position, "z", 0, 10);
 cameraFolder.open();
+
+document.body.appendChild(VRButton.createButton(renderer1));
+
+renderer1.xr.enabled = true;
 
 function animate() {
   requestAnimationFrame(animate);

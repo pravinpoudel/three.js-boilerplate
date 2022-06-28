@@ -10,6 +10,11 @@ Welcome, this is a three.js boilerplate project where you can clone it and start
 4. Three.js
 5. Sample Code
 
+## Latest Update:
+
+# https://localhost:8080/
+https server instead of http (key and certificate included in the repo)
+
 ## Project Directory Structure:
 
 ![image](https://user-images.githubusercontent.com/11494733/176046609-06ae72e6-1adc-4405-88e5-29a48ff9a800.png)
@@ -22,7 +27,7 @@ npm run dev
 
 ## Localhost URL:
 ```
-http://localhost:8080/
+https://localhost:8080/
 ```
 ## Expected output in browser:
 

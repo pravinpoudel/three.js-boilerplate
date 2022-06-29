@@ -39,9 +39,5 @@ and,
 
 Use the UI on top-right side and observe the change in one object into another. This is demo of hierarchial objects created in three.js.
 
-I will write a sample code for hierarchial 3D object as a test code in few days and remove this !!
-
-If you want to check it you can always go to commit history !!! 
-
 
 

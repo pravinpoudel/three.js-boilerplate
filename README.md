@@ -40,4 +40,6 @@ and,
 Use the UI on top-right side and observe the change in one object into another. This is demo of hierarchial objects created in three.js.
 
 
+node modules and certificates is deliberately added in the repo !!!
+
 

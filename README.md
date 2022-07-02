@@ -5,7 +5,7 @@ Welcome, this is a three.js boilerplate project where you can clone it and start
 ## Installed and Configured Items:
 
 1. TypeScript
-2. Webpack Server
+2. Webpack Server (https)
 3. CSS injector (CSS Loader and Style Loader)
 4. Three.js
 5. Sample Code

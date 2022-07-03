@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Orbitron&display=swap");
+
 * {
   box-sizing: border-box;
 }
@@ -14,14 +16,15 @@ body {
 } */
 
 #debug1 {
-  font-family: monospace;
-  font-size: larger;
   position: absolute;
+  font-size: 14px;
   left: 0px;
   top: 50px;
   border: 1px solid red;
-  width: 180px;
-  height: 220px;
+  width: 310px;
+  height: 310px;
+  padding: 5px;
   color: white;
   pointer-events: none;
+  font-family: "Orbitron", sans-serif;
 }

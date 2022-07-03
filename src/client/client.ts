@@ -4,11 +4,13 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import Stats from "three/examples/jsm/libs/stats.module";
 import { GUI } from "dat.gui";
 import { VRButton } from "three/examples/jsm/webxr/VRButton.js";
+import { Points } from "three";
 
 let object1: any,
   object2: any,
   object3: any,
   debug: any,
+  geometry1: THREE.BufferGeometry,
   cube: any,
   camera: any,
   renderer: any;
@@ -18,7 +20,7 @@ const stats = Stats();
 function init() {
   scene.position.set(0, 0, 0); // it is default value but for sanity
   camera = new THREE.PerspectiveCamera(90, 2, 1, 1000);
-  camera.position.set(10, 10, 10);
+  camera.position.set(0, 8, 20);
 
   renderer = new THREE.WebGLRenderer();
   renderer.shadowMap.enabled = true;
@@ -52,6 +54,78 @@ function init() {
   object3.position.set(4, 0, 0);
   object2.add(object3);
   object3.add(new THREE.AxesHelper(5));
+
+  let points = [];
+  points.push(new THREE.Vector3(-5, 0, -5));
+  points.push(new THREE.Vector3(-5, 0, 5));
+  geometry1 = new THREE.BufferGeometry().setFromPoints(points);
+  let line = new THREE.Line(
+    geometry1,
+    new THREE.LineBasicMaterial({ color: 0x888888 })
+  );
+  scene.add(line);
+
+  const positions = geometry1.attributes.position.array as Array<number>; // position is strided 1d array not 2 dimension
+  for (let i = 0, length = positions.length; i < length; i = i + 3) {
+    const v = new THREE.Vector3(
+      positions[i],
+      positions[i + 1],
+      positions[i + 2]
+    ).multiplyScalar(2);
+    positions[i] = v.x;
+    positions[i + 1] = v.y;
+    positions[i + 2] = v.z;
+  }
+
+  geometry1.attributes.position.needsUpdate = true; // specifies whether material need to be recompiled
+
+  const boxGeometry = new THREE.BoxGeometry(5, 5, 5);
+  const glass = new THREE.MeshPhysicalMaterial({});
+  glass.reflectivity = 0.0;
+  glass.sheen = 0.5;
+  glass.specularIntensity = 0.5;
+  glass.transmission = 0.95;
+  glass.metalness = 0.0;
+  glass.clearcoatRoughness = 0.9;
+  glass.clearcoat = 1.0;
+  glass.color = new THREE.Color(0xffffff);
+  glass.thickness = 10;
+  glass.ior = 1.2;
+
+  const skyBoxURL = [
+    "posx.png",
+    "negx.png",
+    "posy.png",
+    "negy.png",
+    "posz.png",
+    "negz.png",
+  ];
+
+  let PMREMGenerator = new THREE.PMREMGenerator(renderer); // it is just instance of PMREMGenerator
+  // PMREMGenerator- Premultiplied MipMapped Radiance Environment Map from a cubeMapped envrionment texture;
+  // This allows different levels of blur to be quickly accessed based on material roughness
+  // and remember that cubemap size is fixed 256 and will not vary with image size
+  //https://github.com/mrdoob/three.js/pull/8363
+  //this.resolution = 256; // NODE: 256 is currently hard coded in the glsl code for performance reasons
+
+  // load function takes first parameter as an array of 6 urls to images and
+  // second parameter as functiopn which will be called when load completes and the argiument will be the loaded texture
+
+  let cubeMapTexture = new THREE.CubeTextureLoader()
+    .setPath("./textures/field-skyboxes/Sorsele2/")
+    .load(
+      ["posx.jpg", "negx.jpg", "posy.jpg", "negy.jpg", "posz.jpg", "negz.jpg"], // images are big so it might not be instant load of image
+      () => {
+        glass.envMap = PMREMGenerator.fromCubemap(cubeMapTexture).texture;
+        PMREMGenerator.dispose();
+        console.log(glass.envMap);
+        scene.background = glass.envMap;
+      }
+    );
+
+  const glassCube = new THREE.Mesh(boxGeometry, glass);
+  glassCube.scale.x = -2;
+  scene.add(glassCube);
 
   const hemLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
   hemLight.position.set(0.0, 10, 0);
@@ -121,6 +195,8 @@ function onWindowResize() {
 }
 
 function debugBoxUpdate() {
+  const cameraWorldPosition = new THREE.Vector3();
+  camera.getWorldPosition(cameraWorldPosition);
   const object1WorldPosition = new THREE.Vector3();
   object1.getWorldPosition(object1WorldPosition);
   const object2WorldPosition = new THREE.Vector3();
@@ -129,7 +205,17 @@ function debugBoxUpdate() {
   object3.getWorldPosition(object3WorldPosition);
 
   debug.innerText =
-    "Red\n" +
+    "\n Camera\n" +
+    " World Pos : " +
+    " ( " +
+    cameraWorldPosition.x.toFixed(2) +
+    ", " +
+    cameraWorldPosition.y.toFixed(2) +
+    ", " +
+    cameraWorldPosition.z.toFixed(2) +
+    " )" +
+    "\n" +
+    "\n Red\n" +
     "Local Pos X : " +
     object1.position.x.toFixed(2) +
     "\n" +

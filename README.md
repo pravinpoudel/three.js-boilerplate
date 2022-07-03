@@ -5,7 +5,7 @@ Welcome, this is a three.js boilerplate project where you can clone it and start
 ## Installed and Configured Items:
 
 1. TypeScript
-2. Webpack Server
+2. Webpack Server (https)
 3. CSS injector (CSS Loader and Style Loader)
 4. Three.js
 5. Sample Code
@@ -30,20 +30,16 @@ npm run dev
 https://localhost:8080/
 ```
 ## Expected output in browser:
-
-![image](https://user-images.githubusercontent.com/11494733/176047375-e701f0ac-f73f-475d-ac0e-ae3d8877ee4b.png)
-
+![image](https://user-images.githubusercontent.com/11494733/176370656-aa41dda1-dba0-46b4-b50e-1da53119282e.png)
 ## Note:
 
 Stylesheet is a file inside ```src/client/styles```
 This is not minified css version !!!
 and,
 
-The sample code is not my code, its just that i found it cool that this code is projecting a cube from four direction like i used to do in engineering drawing in undergrad so i found it cool as a test code !!
+Use the UI on top-right side and observe the change in one object into another. This is demo of hierarchial objects created in three.js.
 
-I will write a sample code for hierarchial 3D object as a test code in few days and remove this !!
 
-If you want to check it you can always go to commit history !!! 
-
+node modules and certificates is deliberately added in the repo !!!
 
 

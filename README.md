@@ -29,8 +29,8 @@ npm run dev
 ```
 https://localhost:8080/
 ```
-## Expected output in browser:
-![image](https://user-images.githubusercontent.com/11494733/176370656-aa41dda1-dba0-46b4-b50e-1da53119282e.png)
+## Expected 360 degree view output in browser:
+![image](https://user-images.githubusercontent.com/11494733/177068695-8528fde9-f86b-4898-8b49-52181bdfe259.png)
 ## Note:
 
 Stylesheet is a file inside ```src/client/styles```

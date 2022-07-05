@@ -15,6 +15,11 @@ Welcome, this is a three.js boilerplate project where you can clone it and start
 # https://localhost:8080/
 https server instead of http (key and certificate included in the repo)
 
+
+## and Working on:
+
+To add infinite procedural terrain !! ( expected to finish by this week)
+
 ## Project Directory Structure:
 
 ![image](https://user-images.githubusercontent.com/11494733/176046609-06ae72e6-1adc-4405-88e5-29a48ff9a800.png)
@@ -41,5 +46,6 @@ Use the UI on top-right side and observe the change in one object into another. 
 
 
 node modules and certificates is deliberately added in the repo !!!
+
 
 

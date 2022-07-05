@@ -222,7 +222,7 @@ for (let i = 0; i < cols; i++) {
 function init() {
   scene.position.set(0, 0, 0); // it is default value but for sanity
   camera = new THREE.PerspectiveCamera(
-    90,
+    60,
     window.innerWidth / window.innerHeight,
     1,
     10000
@@ -241,7 +241,7 @@ function init() {
 
   window.addEventListener("resize", onWindowResize, false);
 
-  new OrbitControls(camera, renderer.domElement);
+  // new OrbitControls(camera, renderer.domElement);
 
   object1 = new THREE.Mesh(
     new THREE.SphereBufferGeometry(),
@@ -384,8 +384,8 @@ function init() {
         glass.envMap = PMREMGenerator.fromCubemap(cubeMapTexture).texture;
         PMREMGenerator.dispose();
         console.log(glass.envMap);
-        scene.background = glass.envMap;
-        // scene.background = new THREE.Color(0xefd1b5);
+        // scene.background = glass.envMap;
+        scene.background = new THREE.Color(0xefd1b5);
       }
     );
 

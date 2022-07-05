@@ -1,7 +1,9 @@
 {
   "dependencies": {
     "@hapi/ammo": "^6.0.0",
+    "perlin-noise-3d": "^0.5.4",
     "physijs": "^1.0.4",
+    "simplex-noise": "^3.0.1",
     "typescript": "^4.7.4"
   },
   "devDependencies": {

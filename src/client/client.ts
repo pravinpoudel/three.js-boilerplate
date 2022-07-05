@@ -3,7 +3,12 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import Stats from "three/examples/jsm/libs/stats.module";
 import { GUI } from "dat.gui";
+import { ImprovedNoise } from "three/examples/jsm/math/ImprovedNoise.js";
+import SimplexNoise from "simplex-noise";
+import { FirstPersonControls } from "three/examples/jsm/controls/FirstPersonControls.js";
 import { VRButton } from "three/examples/jsm/webxr/VRButton.js";
+
+const perlin = new ImprovedNoise();
 
 let object1: any,
   object2: any,
@@ -15,16 +20,224 @@ let object1: any,
   renderer: any;
 const scene = new THREE.Scene();
 const stats = Stats();
+const gui = new GUI();
+let _noise = null;
+let _scale = 20;
+const simplex = new SimplexNoise();
+const clock = new THREE.Clock();
+
+let terrainChunkWidth: number = 256;
+let terrainChunkHeight: number = 256;
+scene.fog = new THREE.FogExp2(0xefd1b5, 0.002);
+
+let controls: any = null;
+const data = generateHeight(terrainChunkWidth, terrainChunkHeight);
+// camera.position.set(100, 800, -800);
+// camera.lookAt(-100, 810, -800);
+
+const geometry = new THREE.PlaneGeometry(
+  7500,
+  7500,
+  terrainChunkWidth - 1,
+  terrainChunkHeight - 1
+);
+geometry.rotateX(-Math.PI / 2);
+const vertices: Array<number> = (geometry as THREE.BufferGeometry).attributes
+  .position.array as Array<number>;
+
+let i = 0,
+  j = 0,
+  l = 0;
+for (i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
+  vertices[j + 1] = data[i] * 10;
+}
+
+let texture: any = generateTexture(data, terrainChunkWidth, terrainChunkHeight);
+if (texture != undefined) {
+  texture = new THREE.CanvasTexture(texture);
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+
+  let mesh = new THREE.Mesh(
+    geometry,
+    new THREE.MeshBasicMaterial({ map: texture })
+  );
+  scene.add(mesh);
+}
+function generateTexture(data: Uint8Array, width: number, height: number) {
+  let context, texture, image, imageData, shade;
+  const vector3 = new THREE.Vector3(0, 0, 0);
+
+  const sun = new THREE.Vector3(1, 1, 1);
+  sun.normalize();
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  context = canvas.getContext("2d");
+  if (context != undefined) {
+    context!.fillStyle = "#000";
+    context!.fillRect(0, 0, width, height);
+    image = context.getImageData(0, 0, canvas.width, canvas.height);
+    imageData = image.data;
+
+    for (let i = 0, j = 0, l = imageData.length; i < l; i += 4, j++) {
+      vector3.x = data[j - 2] - data[j + 2];
+      vector3.y = 2;
+      vector3.z = data[j - width * 2] - data[j + width * 2];
+      vector3.normalize();
+
+      shade = vector3.dot(sun);
+
+      imageData[i] = (96 + shade * 128) * (0.5 + data[j] * 0.007);
+      imageData[i + 1] = (32 + shade * 96) * (0.5 + data[j] * 0.007);
+      imageData[i + 2] = shade * 96 * (0.5 + data[j] * 0.007);
+    }
+    context.putImageData(image, 0, 0);
+
+    const canvasScaled = document.createElement("canvas");
+    canvasScaled.width = 4 * width;
+    canvasScaled.height = 4 * height;
+
+    context = canvasScaled.getContext("2d");
+    if (context != undefined) {
+      context.scale(4, 4);
+      context.drawImage(canvas, 0, 0);
+      image = context.getImageData(
+        0,
+        0,
+        canvasScaled.width,
+        canvasScaled.height
+      );
+      imageData = image.data;
+
+      for (let i = 0, l = imageData.length; i < l; i += 4) {
+        const v = ~~(Math.random() * 5);
+
+        imageData[i] += v;
+        imageData[i + 1] += v;
+        imageData[i + 2] += v;
+      }
+
+      context.putImageData(image, 0, 0);
+      return canvasScaled;
+    }
+  }
+}
+
+function generateHeight(width: number, height: number) {
+  const terrainSize = width * height;
+  let seed = Math.PI / 4;
+  window.Math.random = function () {
+    const x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+  };
+  const data = new Uint8Array(terrainSize);
+  const z = Math.random();
+  let quality = 1;
+  for (let j = 0; j < 4; j++) {
+    for (let i = 0; i < terrainSize; i++) {
+      const x = i % width;
+      const y = Math.floor(i / width);
+      data[i] += Math.abs(
+        perlin.noise(x / quality, y / quality, z) * quality * 1.75
+      );
+    }
+    quality *= 5;
+  }
+  return data;
+}
+
+let cols: number = terrainChunkWidth / _scale;
+let rows: number = terrainChunkHeight / _scale;
+
+//constant colors
+const _WHITE = new THREE.Color(0x808080);
+const _OCEAN = new THREE.Color(0xd9d592);
+const _BEACH = new THREE.Color(0xd9d592);
+const _SNOW = new THREE.Color(0xffffff);
+const _FOREST_TROPICAL = new THREE.Color(0x4f9f0f);
+const _FOREST_TEMPERATE = new THREE.Color(0x2b960e);
+const _FOREST_BOREAL = new THREE.Color(0x29c100);
+
+const noiseParam: any = {
+  octaves: 6,
+  persistence: 0.707,
+  lacunarity: 1.8,
+  exponentiation: 4.5,
+  height: 300.0,
+  scale: 800.0,
+  noiseType: "simplex",
+  seed: 1,
+};
+
+const G = 2.0 ** -noiseParam.persistence;
+
+const _group = new THREE.Group();
+_group.rotation.x = -Math.PI / 2;
+scene.add(_group);
+
+let terrainGeometry = new THREE.PlaneGeometry(
+  terrainChunkWidth,
+  terrainChunkHeight,
+  rows,
+  cols
+);
+const _plane = new THREE.Mesh(
+  terrainGeometry,
+  new THREE.MeshStandardMaterial({
+    wireframe: false,
+    color: 0xffffff,
+    side: THREE.FrontSide,
+  })
+);
+_plane.castShadow = false;
+_plane.receiveShadow = true;
+_group.add(_plane);
+
+//terrain architecture or flow
+// 1. _OnInitialize - create a terrain cuhunk manager with a scene, gui, and params
+// 2. in terrain chuk manager
+let _chunkSize = 500;
+const _chunks: any = [];
+
+var geom = new THREE.BufferGeometry();
+for (let i = 0; i < cols; i++) {
+  for (let j = 0; j < rows; j++) {
+    const shape = new THREE.Shape();
+    const x = i * _scale;
+    const y = i * _scale;
+    shape.moveTo(x + _scale, j + _scale);
+    shape.lineTo(x + _scale, y - _scale);
+    shape.lineTo(x, y + _scale);
+    const TriangleGeometry = new THREE.ShapeGeometry(shape);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const mesh = new THREE.Mesh(TriangleGeometry, material);
+    scene.add(mesh);
+  }
+}
+
+// const noiseRollup = gui.addFolder("Terrain.Noise");
 
 function init() {
   scene.position.set(0, 0, 0); // it is default value but for sanity
-  camera = new THREE.PerspectiveCamera(90, 2, 1, 1000);
-  camera.position.set(0, 8, 20);
+  camera = new THREE.PerspectiveCamera(
+    90,
+    window.innerWidth / window.innerHeight,
+    1,
+    10000
+  );
+  camera.position.set(100, 800, -800);
+  camera.lookAt(-100, 810, -800);
 
   renderer = new THREE.WebGLRenderer();
   renderer.shadowMap.enabled = true;
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
+
+  controls = new FirstPersonControls(camera, renderer.domElement);
+  controls.movementSpeed = 150;
+  controls.lookSpeed = 0.1;
 
   window.addEventListener("resize", onWindowResize, false);
 
@@ -64,8 +277,61 @@ function init() {
   );
   scene.add(line);
 
-  const positions = geometry1.attributes.position.array as Array<number>; // position is strided 1d array not 2 dimension
-  for (let i = 0, length = positions.length; i < length; i = i + 3) {
+  const octaves = 10;
+  const lacunarity = 2.0;
+  const gain = 0.5;
+
+  let amplitude = 0.5;
+  let frequency = 1.0;
+
+  // for (let i = 0; i < octaves; i++) {
+  //   total += amplitude * noise(frequency * x);
+  //   frequency *= lacunarity;
+  //   amplitude *= gain;
+  // }
+
+  // let terrain = new Array(cols);
+
+  const _map = (
+    num: number,
+    in_min: number,
+    in_max: number,
+    out_min: number,
+    out_max: number
+  ) => {
+    return ((num - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min;
+  };
+
+  // for (let y = 0; y < rows; y++) {
+  //   for (let x = 0; x < cols; x++) {
+  //     terrain[x] = new Array(rows);
+  //   }
+  // }
+
+  // for (let y = 0; y < terrainChunkWidth; y++) {
+  //   for (let x = 0; x < terrainChunkHeight; x++) {
+  //     let total = 0.0;
+  //     let amplitude = 1.0;
+  //     let normalization = 0.0;
+  //     let frequency = 1.0;
+  //     for (let o = 0; o <= noiseParam.octaves; o++) {
+  //       const noiseValue =
+  //         simplex.noise2D(x * frequency, y * frequency) * 0.5 + 0.5;
+  //       total += noiseValue * amplitude;
+  //       normalization += amplitude;
+  //       amplitude *= noiseParam.G;
+  //       frequency *= noiseParam.lacunarity;
+  //     }
+  //     total /= normalization;
+  //     terrain[x][y] =
+  //       Math.pow(total, noiseParam.exponentiation) * noiseParam.height;
+  //   }
+  // }
+
+  const positions: Array<number> = (terrainGeometry as THREE.BufferGeometry)
+    .attributes.position.array as Array<number>;
+
+  for (let i = 0; i < positions.length; i += 3) {
     const v = new THREE.Vector3(
       positions[i],
       positions[i + 1],
@@ -75,8 +341,8 @@ function init() {
     positions[i + 1] = v.y;
     positions[i + 2] = v.z;
   }
-
-  geometry1.attributes.position.needsUpdate = true; // specifies whether material need to be recompiled
+  (terrainGeometry as THREE.BufferGeometry).attributes.position.needsUpdate =
+    true;
 
   const boxGeometry = new THREE.BoxGeometry(5, 5, 5);
   const glass = new THREE.MeshPhysicalMaterial({});
@@ -119,6 +385,7 @@ function init() {
         PMREMGenerator.dispose();
         console.log(glass.envMap);
         scene.background = glass.envMap;
+        // scene.background = new THREE.Color(0xefd1b5);
       }
     );
 
@@ -126,17 +393,17 @@ function init() {
   glassCube.scale.x = -2;
   scene.add(glassCube);
 
-  const hemLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
-  hemLight.position.set(0.0, 10, 0);
-  scene.add(hemLight);
+  // const hemLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
+  // hemLight.position.set(0.0, 10, 0);
+  // scene.add(hemLight);
 
-  const pointLight1 = new THREE.PointLight();
-  pointLight1.position.set(10, 10, 10);
-  scene.add(pointLight1);
+  // const pointLight1 = new THREE.PointLight();
+  // pointLight1.position.set(10, 10, 10);
+  // scene.add(pointLight1);
 
-  const pointLight2 = new THREE.PointLight();
-  pointLight2.position.set(-10, 10, 10);
-  scene.add(pointLight2);
+  // const pointLight2 = new THREE.PointLight();
+  // pointLight2.position.set(-10, 10, 10);
+  // scene.add(pointLight2);
 
   // const light1 = new THREE.PointLight();
   // light1.position.set(10, 10, 10);
@@ -158,7 +425,6 @@ function init() {
 
   document.body.appendChild(stats.dom);
 
-  const gui = new GUI();
   const object1Folder = gui.addFolder("Object1");
   object1Folder.add(object1.position, "x", 0, 10, 0.01).name("X Position");
   object1Folder
@@ -185,10 +451,10 @@ function init() {
   renderer.xr.enabled = true;
   debug = document.getElementById("debug1") as HTMLDivElement;
 }
-
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
+  controls.handleResize();
   renderer.setSize(window.innerWidth, window.innerHeight);
   render();
 }
@@ -247,6 +513,7 @@ function animate() {
 }
 
 function render() {
+  controls.update(clock.getDelta());
   renderer.render(scene, camera);
 }
 

@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "strict": true,
     "paths": {
       "dat.gui": ["../../node_modules/@types/dat.gui"],
@@ -8,7 +9,7 @@
       // this means that when you see this in the source code, use this type defination at that address
     }
   },
-  "include": ["**/*.ts"], //The include option tells the TypeScript compiler to
+  "include": ["**/*.ts", "index.d.ts"], //The include option tells the TypeScript compiler to
   // target all files in all subdirectories within the src directory
   "exclude": ["node_modules"]
   // The exclude option makes sure the TypeScript compiler doesn’t dive into

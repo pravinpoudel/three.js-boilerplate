@@ -18,7 +18,11 @@ https server instead of http (key and certificate included in the repo)
 
 ## and Working on:
 
-To add infinite procedural terrain !! ( expected to finish by this week)
+```diff
+- To add infinite procedural terrain using heightmap generated from perlin noise !!!
+```
+
+
 
 ## Project Directory Structure:
 

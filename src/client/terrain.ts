@@ -177,8 +177,8 @@ async function init() {
   let data = await extract_height_data();
 
   const geometry = new THREE.PlaneGeometry(
-    3 * terrainDimension.x,
-    3 * terrainDimension.y,
+    2 * terrainDimension.x,
+    2 * terrainDimension.y,
     terrainDimension.x - 1,
     terrainDimension.y - 1
   );

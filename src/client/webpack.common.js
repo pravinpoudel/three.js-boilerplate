@@ -2,7 +2,7 @@
 
 const path = require("path");
 module.exports = {
-  entry: "./src/client/client.ts", //the file from which Webpack’s dependency graph (tree) is constructed
+  entry: "./src/client/terrain.ts", //the file from which Webpack’s dependency graph (tree) is constructed
   module: {
     //module configures Webpack to use the ts-loader package which allows the integration with TypeScript.
     rules: [

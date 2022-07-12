@@ -17,6 +17,7 @@ body {
 
 #debug1 {
   position: absolute;
+  display: none;
   font-size: 14px;
   left: 0px;
   top: 50px;

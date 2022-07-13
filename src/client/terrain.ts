@@ -48,7 +48,7 @@ let cols: number = terrainChunkWidth / _scale;
 let rows: number = terrainChunkHeight / _scale;
 
 const terrainDimension = new THREE.Vector2(4104, 1856);
-const terrainChunkDimension = new Vector2(256, 256);
+const terrainChunkDimension = new Vector2(1024, 512);
 
 const chunkCount: THREE.Vector2 = new THREE.Vector2(
   Math.ceil(terrainDimension.x / terrainChunkDimension.x),
@@ -75,83 +75,6 @@ function _ChooseColour(x: Number, y: Number, z: Number) {
   return new THREE.Color(0x808080);
 }
 
-// const textureLoader = new THREE.TextureLoader();
-// textureLoader.load("textures/grid.png", function (texture) {
-//   texture.wrapS = THREE.RepeatWrapping;
-//   texture.wrapT = THREE.RepeatWrapping;
-//   texture.repeat.set(terrainWidth - 1, terrainDepth - 1);
-//   groundMaterial.map = texture;
-//   groundMaterial.needsUpdate = true;
-// });
-
-function generateTexture(data: Uint8Array, width: number, height: number) {
-  let context, texture, image, imageData, shade;
-  const vector3 = new THREE.Vector3(0, 0, 0);
-
-  const sun = new THREE.Vector3(1, 1, 1);
-  sun.normalize();
-
-  const canvas = document.createElement("canvas");
-
-  canvas.width = width;
-  canvas.height = height;
-  context = canvas.getContext("2d");
-
-  if (context != undefined) {
-    context!.fillStyle = "#000";
-    context!.fillRect(0, 0, width, height);
-    image = context.getImageData(0, 0, canvas.width, canvas.height);
-    imageData = image.data;
-
-    for (let i = 0, j = 0, l = imageData.length; i < l; i += 4, j++) {
-      vector3.x = data[j - 2] - data[j + 2];
-      vector3.y = 2;
-      vector3.z = data[j - width * 2] - data[j + width * 2];
-      vector3.normalize();
-
-      shade = vector3.dot(sun);
-
-      imageData[i] = (96 + shade * 128) * (0.5 + data[j] * 0.007);
-      imageData[i + 1] = (32 + shade * 96) * (0.5 + data[j] * 0.007);
-      imageData[i + 2] = shade * 96 * (0.5 + data[j] * 0.007);
-    }
-    context.putImageData(image, 0, 0);
-
-    const canvasScaled = document.createElement("canvas");
-    canvasScaled.width = 4 * width;
-    canvasScaled.height = 4 * height;
-
-    context = canvasScaled.getContext("2d");
-    if (context != undefined) {
-      context.scale(4, 4);
-      context.drawImage(canvas, 0, 0);
-      image = context.getImageData(
-        0,
-        0,
-        canvasScaled.width,
-        canvasScaled.height
-      );
-      imageData = image.data;
-
-      for (let i = 0, l = imageData.length; i < l; i += 4) {
-        const v = ~~(Math.random() * 5);
-
-        imageData[i] += v;
-        imageData[i + 1] += v;
-        imageData[i + 2] += v;
-      }
-
-      context.putImageData(image, 0, 0);
-      return canvasScaled;
-    }
-  }
-}
-
-//terrain architecture or flow to achieve
-// 1. _OnInitialize - create a terrain cuhunk manager with a scene, gui, and params
-// 2. in terrain chuk manager
-// 3. create lod for different chunk size
-
 async function init() {
   scene.position.set(0, 0, 0); // it is default value but for sanity
   camera = new THREE.PerspectiveCamera(
@@ -168,7 +91,8 @@ async function init() {
   renderer.gammaOutput = true;
   renderer.shadowMap.enabled = true;
   renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+  let mainscreen = document.getElementById("main-screen") as HTMLElement;
+  mainscreen.appendChild(renderer.domElement);
 
   controls = new ArcballControls(camera, renderer.domElement, scene);
   controls.addEventListener("change", render);
@@ -198,25 +122,63 @@ async function init() {
 
   geometry.computeVertexNormals();
 
-  // let texture: any = generateTexture(
-  //   data,
-  //   4 * terrainDimension.x,
-  //   4 * terrainDimension.y
-  // );
-
-  // texture = new THREE.CanvasTexture(texture);
-  // texture.wrapS = THREE.ClampToEdgeWrapping;
-  // texture.wrapT = THREE.ClampToEdgeWrapping;
-
   const meshMaterial = new THREE.MeshLambertMaterial({
     // map: texture,
     color: 0x888888,
     side: THREE.DoubleSide,
   });
-  let mesh = new THREE.Mesh(geometry, meshMaterial);
-  mesh.castShadow = false;
-  mesh.receiveShadow = true;
-  scene.add(mesh);
+
+  let chunk = new Array();
+  let offsetX = 0;
+  let offsetY = 0;
+  for (let i = 0; i < chunkCount.x * chunkCount.y; i++) {
+    let partial = new Vector2();
+    chunk[i] = new Array();
+    partial.x =
+      terrainDimension.x - offsetX >= terrainChunkDimension.x
+        ? terrainChunkDimension.x
+        : terrainDimension.x - offsetX;
+    partial.y =
+      terrainDimension.y - offsetY >= terrainChunkDimension.y
+        ? terrainChunkDimension.y
+        : terrainDimension.y - offsetY;
+    for (let m = 0; m < partial.y; m++) {
+      for (let n = 0; n < partial.x; n++) {
+        let indexX = offsetX + n;
+        let indexY = offsetY + m;
+        let index = indexX + indexY * terrainDimension.x;
+        chunk[i].push(
+          new THREE.Vector3(
+            vertices[3 * index],
+            vertices[3 * index + 1],
+            vertices[3 * index + 2]
+          )
+        );
+      }
+    }
+    let geometry = new THREE.PlaneGeometry(
+      2 * partial.x,
+      2 * partial.y,
+      partial.x - 1,
+      partial.y - 1
+    );
+    geometry.setFromPoints(chunk[i]);
+    let mesh = new THREE.Mesh(geometry, meshMaterial);
+    mesh.castShadow = false;
+    mesh.receiveShadow = true;
+    mesh.geometry.computeVertexNormals();
+    scene.add(mesh);
+
+    offsetX = offsetX + partial.x;
+    if (offsetX == terrainDimension.x) {
+      offsetY = offsetY + partial.y;
+    }
+    offsetX = offsetX % terrainDimension.x;
+  }
+
+  mainscreen.style.display = "block";
+  (document.getElementById("loader") as HTMLElement).style.display = "none";
+  //make new mesh from each geometry with same material
 
   const light = new THREE.AmbientLight(0xffffff, 0.7); // soft white light
   scene.add(light);
@@ -243,22 +205,6 @@ async function init() {
   dirLight.shadow.bias = -0.0001; // just to remove artifact in the shadow; just got this value from documentation
   //default is 0
 
-  // const dirLightHelper = new THREE.DirectionalLightHelper(dirLight, 100);
-  // scene.add(dirLightHelper);
-
-  // scene.add(new THREE.HemisphereLight(0xff8080, 0xff0000, 0.6));
-
-  // for (let f of mesh.geometry.faces) {
-  //   const vs = [f.a, f.b, f.c];
-
-  //   const vertexColours = [];
-  //   for (let v of vs) {
-  //     vertexColours.push(colours[v]);
-  //   }
-  //   f.vertexColors = vertexColours;
-  // }
-
-  mesh.geometry.computeVertexNormals();
   const octaves = 10;
   const lacunarity = 2.0;
   const gain = 0.5;

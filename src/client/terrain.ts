@@ -10,6 +10,7 @@ import { ArcballControls } from "three/examples/jsm/controls/ArcballControls.js"
 import { VRButton } from "three/examples/jsm/webxr/VRButton.js";
 import { Vector2 } from "three";
 import { terrainShader } from "./shaders/terrain-shader.js";
+import { download } from "./utils.js";
 
 const perlin = new ImprovedNoise();
 let camera: any, renderer: any;
@@ -55,6 +56,8 @@ async function extract_height_data() {
     throw new Error(message);
   }
   const data2 = await height_data_response.json();
+  const smallJsonData = data2.slice(0, 952128);
+  download("smallElevation.json", JSON.stringify(smallJsonData));
   return data2;
 }
 

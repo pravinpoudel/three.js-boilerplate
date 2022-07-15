@@ -267,7 +267,7 @@ function init() {
   object2.add(object3);
   object3.add(new THREE.AxesHelper(5));
 
-  let points = [];
+  let points = [] as Array<THREE.Vector3>;
   points.push(new THREE.Vector3(-5, 0, -5));
   points.push(new THREE.Vector3(-5, 0, 5));
   geometry1 = new THREE.BufferGeometry().setFromPoints(points);

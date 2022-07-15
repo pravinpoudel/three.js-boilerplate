@@ -2,6 +2,7 @@
   "compilerOptions": {
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "noImplicitAny": false, // to turn off getting errors when values are implicitly set to "any"
     "strict": true,
     "paths": {
       "dat.gui": ["../../node_modules/@types/dat.gui"],
